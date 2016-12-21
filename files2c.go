@@ -10,6 +10,7 @@ import(
 	"regexp"
 	"strings"
 	"strconv"
+	"path/filepath"
 )
 
 var main_colCount = 15
@@ -30,7 +31,8 @@ func process(fi os.FileInfo) {
 	defer f.Close()
 
 	// Replacing dots to underscores in module name.
-	moduleVarName := strings.ToLower(strings.Replace(fi.Name(), ".", "_", -1))
+	moduleName := strings.ToLower(strings.Replace(strings.TrimSuffix(main_outModuleFilename, filepath.Ext(main_outModuleFilename)), ".", "_", -1))
+	moduleVarName := moduleName + "_" + strings.ToLower(strings.Replace(fi.Name(), ".", "_", -1))
 	if _, err := strconv.Atoi(string([]rune(moduleVarName)[0])); err == nil {
 		// If the module name starts with a number, we prepend an underscore.
 		moduleVarName = "_" + moduleVarName
