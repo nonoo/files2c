@@ -19,7 +19,7 @@ var main_outHeaderFile *os.File
 var main_outModuleFilename = "out.c"
 var main_outModuleFile *os.File
 
-func Process(fi os.FileInfo) {
+func process(fi os.FileInfo) {
 	fmt.Println("  processing " + fi.Name())
 
 	f, err := os.Open(main_dir + "/" + fi.Name())
@@ -73,13 +73,13 @@ func Process(fi os.FileInfo) {
 	main_outHeaderFile.WriteString("extern " + arrayDefine + ";\n")
 }
 
-func InitHeaderFile() {
+func initHeaderFile() {
 	main_outHeaderFile.WriteString("#ifndef " + strings.ToUpper(strings.Replace(main_outHeaderFilename, ".", "_", -1)) + "__\n")
 	main_outHeaderFile.WriteString("#define " + strings.ToUpper(strings.Replace(main_outHeaderFilename, ".", "_", -1)) + "__\n\n")
 	main_outHeaderFile.WriteString("#include <stdint.h>\n\n")
 }
 
-func InitModuleFile() {
+func initModuleFile() {
 	main_outModuleFile.WriteString("#include \"" + main_outHeaderFilename + "\"\n");
 }
 
@@ -100,14 +100,14 @@ func main() {
 		log.Fatal("can't create header file " + main_outHeaderFilename)
 	}
 	defer main_outHeaderFile.Close()
-	InitHeaderFile()
+	initHeaderFile()
 
 	main_outModuleFile, err = os.Create(main_outModuleFilename)
 	if err != nil {
 		log.Fatal("can't create module file " + main_outModuleFilename)
 	}
 	defer main_outModuleFile.Close()
-	InitModuleFile()
+	initModuleFile()
 
 	files, err := ioutil.ReadDir(main_dir)
 	if err != nil {
@@ -129,7 +129,7 @@ func main() {
     	if regexpGo.MatchString(fi.Name()) {
     		continue
     	}
-		Process(fi)
+		process(fi)
 	}
 
 	main_outHeaderFile.WriteString("\n#endif\n")
