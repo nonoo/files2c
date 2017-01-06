@@ -33,6 +33,8 @@ func process(fi os.FileInfo) {
 	// Replacing dots to underscores in module name.
 	moduleName := strings.ToLower(strings.Replace(strings.TrimSuffix(main_outModuleFilename, filepath.Ext(main_outModuleFilename)), ".", "_", -1))
 	moduleVarName := moduleName + "_" + strings.ToLower(strings.Replace(fi.Name(), ".", "_", -1))
+	// Replacing spaces to underscores in module variable name.
+	moduleVarName = strings.Replace(moduleVarName, " ", "_", -1)
 	if _, err := strconv.Atoi(string([]rune(moduleVarName)[0])); err == nil {
 		// If the module name starts with a number, we prepend an underscore.
 		moduleVarName = "_" + moduleVarName
@@ -55,22 +57,19 @@ func process(fi os.FileInfo) {
 			break
 		}
 
-		if i > 0 {
+		if i > 0 && i < main_colCount {
 			main_outModuleFile.WriteString(", ")
+		}
 
-			if i % main_colCount == 0 {
-				main_outModuleFile.WriteString("\n\t")
-			}
+		if i == main_colCount {
+			main_outModuleFile.WriteString("\n\t")
+			i = 0
 		}
 
 		out := fmt.Sprintf("0x%.2x", b)
 		main_outModuleFile.WriteString(out)
 	}
-	// If we have finished by NOT adding a new line.
-	if i % main_colCount != 0 {
-		main_outModuleFile.WriteString("\n")
-	}
-	main_outModuleFile.WriteString("};\n")
+	main_outModuleFile.WriteString("\n};\n")
 
 	main_outHeaderFile.WriteString("extern " + arrayDefine + ";\n")
 }

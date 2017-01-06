@@ -9,10 +9,5 @@ generated with the extern declarations.
 
 ```
 go get github.com/nonoo/files2c
-```
-
-# Building
-
-```
-go build github.com/nonoo/files2c
+go install github.com/nonoo/files2c
 ```
