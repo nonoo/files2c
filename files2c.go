@@ -57,8 +57,12 @@ func process(fi os.FileInfo) {
 			break
 		}
 
-		if i > 0 && i < main_colCount {
-			main_outModuleFile.WriteString(", ")
+		if i > 0 {
+			if i < main_colCount {
+				main_outModuleFile.WriteString(", ")
+			} else {
+				main_outModuleFile.WriteString(",")
+			}
 		}
 
 		if i == main_colCount {
