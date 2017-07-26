@@ -40,7 +40,7 @@ func process(fi os.FileInfo) {
 		moduleVarName = "_" + moduleVarName
 	}
 
-	arrayDefine := "uint8_t " + moduleVarName + "[" + strconv.FormatInt(fi.Size(), 10) + "]"
+	arrayDefine := "const uint8_t " + moduleVarName + "[" + strconv.FormatInt(fi.Size(), 10) + "]"
 
 	out := "\n" + arrayDefine + " = {\n\t"
 	main_outModuleFile.WriteString(out)
