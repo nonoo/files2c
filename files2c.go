@@ -81,8 +81,12 @@ func process(fi os.FileInfo) {
 }
 
 func initHeaderFile() {
-	main_outHeaderFile.WriteString("#ifndef " + strings.ToUpper(strings.Replace(main_outHeaderFilename, ".", "_", -1)) + "_\n")
-	main_outHeaderFile.WriteString("#define " + strings.ToUpper(strings.Replace(main_outHeaderFilename, ".", "_", -1)) + "_\n\n")
+	outHeaderName := main_outHeaderFilename
+	outHeaderName = strings.Replace(outHeaderName, ".", "_", -1)
+	outHeaderName = strings.Replace(outHeaderName, "-", "_", -1)
+	outHeaderName = strings.ToUpper(outHeaderName)
+	main_outHeaderFile.WriteString("#ifndef " + outHeaderName + "_\n")
+	main_outHeaderFile.WriteString("#define " + outHeaderName + "_\n\n")
 	main_outHeaderFile.WriteString("#include <stdint.h>\n\n")
 }
 
