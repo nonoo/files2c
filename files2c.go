@@ -35,6 +35,8 @@ func process(fi os.FileInfo) {
 	moduleVarName := moduleName + "_" + strings.ToLower(strings.Replace(fi.Name(), ".", "_", -1))
 	// Replacing spaces to underscores in module variable name.
 	moduleVarName = strings.Replace(moduleVarName, " ", "_", -1)
+	// Replacing dashes to underscores in module variable name.
+	moduleVarName = strings.Replace(moduleVarName, "-", "_", -1)
 	if _, err := strconv.Atoi(string([]rune(moduleVarName)[0])); err == nil {
 		// If the module name starts with a number, we prepend an underscore.
 		moduleVarName = "_" + moduleVarName
@@ -79,8 +81,8 @@ func process(fi os.FileInfo) {
 }
 
 func initHeaderFile() {
-	main_outHeaderFile.WriteString("#ifndef " + strings.ToUpper(strings.Replace(main_outHeaderFilename, ".", "_", -1)) + "__\n")
-	main_outHeaderFile.WriteString("#define " + strings.ToUpper(strings.Replace(main_outHeaderFilename, ".", "_", -1)) + "__\n\n")
+	main_outHeaderFile.WriteString("#ifndef " + strings.ToUpper(strings.Replace(main_outHeaderFilename, ".", "_", -1)) + "_\n")
+	main_outHeaderFile.WriteString("#define " + strings.ToUpper(strings.Replace(main_outHeaderFilename, ".", "_", -1)) + "_\n\n")
 	main_outHeaderFile.WriteString("#include <stdint.h>\n\n")
 }
 
