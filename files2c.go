@@ -22,6 +22,8 @@ var main_outModuleFilename = "out.c"
 var main_outModuleFile *os.File
 var main_xorKeyStr string
 var main_xorKey []byte
+var main_attributePre string
+var main_attributePost string
 
 func processFile(fi os.FileInfo) {
 	fmt.Println("  processing " + fi.Name())
@@ -45,9 +47,7 @@ func processFile(fi os.FileInfo) {
 		moduleVarName = "_" + moduleVarName
 	}
 
-	arrayDefine := "const uint8_t " + moduleVarName + "[" + strconv.FormatInt(fi.Size(), 10) + "]"
-
-	out := "\n" + arrayDefine + " = {\n\t"
+	out := "\nconst uint8_t " + main_attributePre + moduleVarName + "[" + strconv.FormatInt(fi.Size(), 10) + "]" + main_attributePost + " = {\n\t"
 	main_outModuleFile.WriteString(out)
 
 	b := make([]byte, 1) // We read to this 1 byte buffer.
@@ -84,7 +84,7 @@ func processFile(fi os.FileInfo) {
 	}
 	main_outModuleFile.WriteString("\n};\n")
 
-	main_outHeaderFile.WriteString("extern " + arrayDefine + ";\n")
+	main_outHeaderFile.WriteString("extern const uint8_t " + moduleVarName + "[" + strconv.FormatInt(fi.Size(), 10) + "];\n")
 }
 
 func initHeaderFile() {
@@ -107,6 +107,8 @@ func main() {
 	flag.StringVar(&main_outHeaderFilename, "h", main_outHeaderFilename, "output header filename")
 	flag.StringVar(&main_outModuleFilename, "m", main_outModuleFilename, "output module filename")
 	flag.StringVar(&main_xorKeyStr, "x", main_xorKeyStr, "xor all binaries with this hex key")
+	flag.StringVar(&main_attributePre, "p", main_attributePre, "attribute for the binary arrays (defined before the array name)")
+	flag.StringVar(&main_attributePost, "a", main_attributePost, "attribute for the binary arrays (defined after the array name)")
 	flag.Parse()
 
 	if main_dir == "" {
@@ -137,6 +139,13 @@ func main() {
 	files, err := ioutil.ReadDir(main_dir)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if len(main_attributePre) > 0 {
+		main_attributePre += " "
+	}
+	if len(main_attributePost) > 0 {
+		main_attributePost = " " + main_attributePost
 	}
 
 	fmt.Println("files2c processing directory " + main_dir)
