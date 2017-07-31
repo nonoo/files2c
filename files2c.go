@@ -1,16 +1,17 @@
 package main
 
-import(
+import (
+	"encoding/hex"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"log"
-	"flag"
-	"regexp"
-	"strings"
-	"strconv"
+	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 var main_colCount = 15
@@ -19,8 +20,10 @@ var main_outHeaderFilename = "out.h"
 var main_outHeaderFile *os.File
 var main_outModuleFilename = "out.c"
 var main_outModuleFile *os.File
+var main_xorKeyStr string
+var main_xorKey []byte
 
-func process(fi os.FileInfo) {
+func processFile(fi os.FileInfo) {
 	fmt.Println("  processing " + fi.Name())
 
 	f, err := os.Open(main_dir + "/" + fi.Name())
@@ -72,6 +75,10 @@ func process(fi os.FileInfo) {
 			i = 0
 		}
 
+		if len(main_xorKey) > 0 {
+			b[0] = b[0] ^ main_xorKey[i%len(main_xorKey)]
+		}
+
 		out := fmt.Sprintf("0x%.2x", b)
 		main_outModuleFile.WriteString(out)
 	}
@@ -91,7 +98,7 @@ func initHeaderFile() {
 }
 
 func initModuleFile() {
-	main_outModuleFile.WriteString("#include \"" + main_outHeaderFilename + "\"\n");
+	main_outModuleFile.WriteString("#include \"" + main_outHeaderFilename + "\"\n")
 }
 
 func main() {
@@ -99,6 +106,7 @@ func main() {
 	flag.StringVar(&main_dir, "d", main_dir, "convert files in this directory")
 	flag.StringVar(&main_outHeaderFilename, "h", main_outHeaderFilename, "output header filename")
 	flag.StringVar(&main_outModuleFilename, "m", main_outModuleFilename, "output module filename")
+	flag.StringVar(&main_xorKeyStr, "x", main_xorKeyStr, "xor all binaries with this hex key")
 	flag.Parse()
 
 	if main_dir == "" {
@@ -106,6 +114,12 @@ func main() {
 	}
 
 	var err error
+	if len(main_xorKeyStr) > 0 {
+		main_xorKey, err = hex.DecodeString(main_xorKeyStr)
+		if err != nil {
+			log.Fatal("invalid hex string " + main_xorKeyStr)
+		}
+	}
 	main_outHeaderFile, err = os.Create(main_outHeaderFilename)
 	if err != nil {
 		log.Fatal("can't create header file " + main_outHeaderFilename)
@@ -130,17 +144,17 @@ func main() {
 	// Ignoring .go files.
 	regexpGo, _ := regexp.Compile("\\.go$")
 
-    for _, fi := range files {
-    	if !fi.Mode().IsRegular() {
-    		continue
-    	}
-    	if fi.Name() == main_outHeaderFilename || fi.Name() == main_outModuleFilename {
-    		continue
-    	}
-    	if regexpGo.MatchString(fi.Name()) {
-    		continue
-    	}
-		process(fi)
+	for _, fi := range files {
+		if !fi.Mode().IsRegular() {
+			continue
+		}
+		if fi.Name() == main_outHeaderFilename || fi.Name() == main_outModuleFilename {
+			continue
+		}
+		if regexpGo.MatchString(fi.Name()) {
+			continue
+		}
+		processFile(fi)
 	}
 
 	main_outHeaderFile.WriteString("\n#endif\n")
