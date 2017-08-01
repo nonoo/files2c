@@ -51,8 +51,8 @@ func processFile(fi os.FileInfo) {
 	main_outModuleFile.WriteString(out)
 
 	b := make([]byte, 1) // We read to this 1 byte buffer.
-	i := 0
-	for ; true; i++ {
+	bytesXored := 0
+	for i := 0; true; i++ {
 		bytesRead, err := f.Read(b)
 		if bytesRead != 1 {
 			if err != io.EOF {
@@ -76,7 +76,8 @@ func processFile(fi os.FileInfo) {
 		}
 
 		if len(main_xorKey) > 0 {
-			b[0] = b[0] ^ main_xorKey[i%len(main_xorKey)]
+			b[0] = b[0] ^ main_xorKey[bytesXored%len(main_xorKey)]
+			bytesXored++
 		}
 
 		out := fmt.Sprintf("0x%.2x", b)
