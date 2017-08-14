@@ -24,6 +24,25 @@ var main_xorKeyStr string
 var main_xorKey []byte
 var main_attributePre string
 var main_attributePost string
+var main_generateIndex bool
+
+func getModuleName() string {
+	return strings.ToLower(strings.Replace(strings.TrimSuffix(main_outModuleFilename, filepath.Ext(main_outModuleFilename)), ".", "_", -1))
+}
+
+func getModuleVarNameFromFilename(fi os.FileInfo) string {
+	// Replacing dots to underscores in module name.
+	moduleVarName := getModuleName() + "_" + strings.ToLower(strings.Replace(fi.Name(), ".", "_", -1))
+	// Replacing spaces to underscores in module variable name.
+	moduleVarName = strings.Replace(moduleVarName, " ", "_", -1)
+	// Replacing dashes to underscores in module variable name.
+	moduleVarName = strings.Replace(moduleVarName, "-", "_", -1)
+	if _, err := strconv.Atoi(string([]rune(moduleVarName)[0])); err == nil {
+		// If the module name starts with a number, we prepend an underscore.
+		moduleVarName = "_" + moduleVarName
+	}
+	return moduleVarName
+}
 
 func processFile(fi os.FileInfo) {
 	fmt.Println("  processing " + fi.Name())
@@ -35,17 +54,7 @@ func processFile(fi os.FileInfo) {
 	}
 	defer f.Close()
 
-	// Replacing dots to underscores in module name.
-	moduleName := strings.ToLower(strings.Replace(strings.TrimSuffix(main_outModuleFilename, filepath.Ext(main_outModuleFilename)), ".", "_", -1))
-	moduleVarName := moduleName + "_" + strings.ToLower(strings.Replace(fi.Name(), ".", "_", -1))
-	// Replacing spaces to underscores in module variable name.
-	moduleVarName = strings.Replace(moduleVarName, " ", "_", -1)
-	// Replacing dashes to underscores in module variable name.
-	moduleVarName = strings.Replace(moduleVarName, "-", "_", -1)
-	if _, err := strconv.Atoi(string([]rune(moduleVarName)[0])); err == nil {
-		// If the module name starts with a number, we prepend an underscore.
-		moduleVarName = "_" + moduleVarName
-	}
+	moduleVarName := getModuleVarNameFromFilename(fi)
 
 	out := "\nconst uint8_t " + main_attributePre + moduleVarName + "[" + strconv.FormatInt(fi.Size(), 10) + "]" + main_attributePost + " = {\n\t"
 	main_outModuleFile.WriteString(out)
@@ -110,6 +119,7 @@ func main() {
 	flag.StringVar(&main_xorKeyStr, "x", main_xorKeyStr, "xor all binaries with this hex key")
 	flag.StringVar(&main_attributePre, "p", main_attributePre, "attribute for the binary arrays (defined before the array name)")
 	flag.StringVar(&main_attributePost, "a", main_attributePost, "attribute for the binary arrays (defined after the array name)")
+	flag.BoolVar(&main_generateIndex, "i", main_generateIndex, "generate index table")
 	flag.Parse()
 
 	if main_dir == "" {
@@ -154,6 +164,7 @@ func main() {
 	// Ignoring .go files.
 	regexpGo, _ := regexp.Compile("\\.go$")
 
+	var fileList []os.FileInfo
 	for _, fi := range files {
 		if !fi.Mode().IsRegular() {
 			continue
@@ -164,7 +175,25 @@ func main() {
 		if regexpGo.MatchString(fi.Name()) {
 			continue
 		}
+		fileList = append(fileList, fi)
+	}
+
+	for _, fi := range fileList {
 		processFile(fi)
+	}
+
+	if main_generateIndex {
+		main_outHeaderFile.WriteString("\ntypedef struct __attribute__((packed)) {\n\tconst char *filename;\n\tconst uint8_t *data;\n\tconst unsigned int size;\n} " + getModuleName() + "_index_t;\n")
+		main_outHeaderFile.WriteString("\nextern const " + getModuleName() + "_index_t " + getModuleName() + "_index[];\n")
+
+		main_outModuleFile.WriteString("\nconst " + getModuleName() + "_index_t " + getModuleName() + "_index[] = {\n")
+		for i, fi := range fileList {
+			if i > 0 {
+				main_outModuleFile.WriteString(",\n")
+			}
+			main_outModuleFile.WriteString("\t{ \"" + fi.Name() + "\", " + getModuleVarNameFromFilename(fi) + ", " + strconv.FormatInt(fi.Size(), 10) + " }")
+		}
+		main_outModuleFile.WriteString("\n};\n")
 	}
 
 	main_outHeaderFile.WriteString("\n#endif\n")
