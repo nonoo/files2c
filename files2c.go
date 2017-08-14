@@ -184,9 +184,9 @@ func main() {
 
 	if main_generateIndex {
 		main_outHeaderFile.WriteString("\ntypedef struct __attribute__((packed)) {\n\tconst char *filename;\n\tconst uint8_t *data;\n\tconst unsigned int size;\n} " + getModuleName() + "_index_t;\n")
-		main_outHeaderFile.WriteString("\nextern const " + getModuleName() + "_index_t " + getModuleName() + "_index[];\n")
+		main_outHeaderFile.WriteString("\nextern const " + getModuleName() + "_index_t " + getModuleName() + "_index[" + fmt.Sprintf("%d", len(fileList)) + "];\n")
 
-		main_outModuleFile.WriteString("\nconst " + getModuleName() + "_index_t " + getModuleName() + "_index[] = {\n")
+		main_outModuleFile.WriteString("\nconst " + getModuleName() + "_index_t " + getModuleName() + "_index[" + fmt.Sprintf("%d", len(fileList)) + "] = {\n")
 		for i, fi := range fileList {
 			if i > 0 {
 				main_outModuleFile.WriteString(",\n")
