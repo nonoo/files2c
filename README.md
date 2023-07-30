@@ -8,6 +8,5 @@ generated with the extern declarations.
 # Installing
 
 ```
-go get github.com/nonoo/files2c
-go install github.com/nonoo/files2c
+go install github.com/nonoo/files2c@latest
 ```
