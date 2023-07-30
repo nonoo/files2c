@@ -102,8 +102,8 @@ func initHeaderFile() {
 	outHeaderName = strings.Replace(outHeaderName, ".", "_", -1)
 	outHeaderName = strings.Replace(outHeaderName, "-", "_", -1)
 	outHeaderName = strings.ToUpper(outHeaderName)
-	main_outHeaderFile.WriteString("#ifndef " + outHeaderName + "__\n")
-	main_outHeaderFile.WriteString("#define " + outHeaderName + "__\n\n")
+	main_outHeaderFile.WriteString("#ifndef FILES2C_" + outHeaderName + "__\n")
+	main_outHeaderFile.WriteString("#define FILES2C_" + outHeaderName + "__\n\n")
 	main_outHeaderFile.WriteString("#include <stdint.h>\n\n")
 }
 
